@@ -1,0 +1,65 @@
+import random
+from collections import Counter
+
+# Define ranks and suits
+RANKS = '2 3 4 5 6 7 8 9 T J Q K A'.split()
+SUITS = 'H D C S'.split()  # Hearts, Diamonds, Clubs, Spades
+
+# Build deck
+deck = [rank + suit for rank in RANKS for suit in SUITS]
+
+# Hand ranking categories
+HAND_RANKS = [
+    "High Card", "One Pair", "Two Pair", "Three of a Kind",
+    "Straight", "Flush", "Full House", "Four of a Kind", "Straight Flush"
+]
+
+def get_hand_rank(hand):
+    ranks = sorted([card[0] for card in hand], key=RANKS.index)
+    suits = [card[1] for card in hand]
+
+    rank_counts = Counter(ranks).values()
+    is_flush = len(set(suits)) == 1
+    is_straight = False
+
+    rank_indices = sorted([RANKS.index(r) for r in ranks])
+    if rank_indices == list(range(rank_indices[0], rank_indices[0] + 5)):
+        is_straight = True
+    elif set(ranks) == set(['A', '2', '3', '4', '5']):
+        is_straight = True
+
+    if is_straight and is_flush:
+        return "Straight Flush"
+    elif 4 in rank_counts:
+        return "Four of a Kind"
+    elif sorted(rank_counts) == [2, 3]:
+        return "Full House"
+    elif is_flush:
+        return "Flush"
+    elif is_straight:
+        return "Straight"
+    elif 3 in rank_counts:
+        return "Three of a Kind"
+    elif list(rank_counts).count(2) == 2:
+        return "Two Pair"
+    elif 2 in rank_counts:
+        return "One Pair"
+    else:
+        return "High Card"
+
+def simulate_poker_hands(num_simulations=100000):
+    results = Counter()
+    for _ in range(num_simulations):
+        random.shuffle(deck)
+        hand = deck[:5]
+        hand_rank = get_hand_rank(hand)
+        results[hand_rank] += 1
+
+    # Convert to percentages
+    for rank in HAND_RANKS:
+        count = results[rank]
+        probability = (count / num_simulations) * 100
+        print(f"{rank:17}: {probability:.4f}%")
+
+if __name__ == "__main__":
+    simulate_poker_hands(100000)
