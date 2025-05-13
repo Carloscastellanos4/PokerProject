@@ -1,0 +1,57 @@
+import random
+from collections import Counter
+
+# Constants
+SUITS = 'Hearts Diamonds Clubs Spades'.split()
+RANKS = '2 3 4 5 6 7 8 9 10 J Q K A'.split()
+VALUES = {str(k): k for k in range(2, 11)}
+VALUES.update({'J': 10, 'Q': 10, 'K': 10, 'A': 11})
+
+def create_deck():
+    return [rank for rank in RANKS for _ in SUITS]
+
+def hand_value(hand):
+    value = sum(VALUES[card] for card in hand)
+    aces = hand.count('A')
+    while value > 21 and aces:
+        value -= 10
+        aces -= 1
+    return value
+
+def simulate_blackjack(num_simulations=100000):
+    outcomes = Counter({"player_win": 0, "dealer_win": 0, "push": 0})
+    for _ in range(num_simulations):
+        deck = create_deck()
+        random.shuffle(deck)
+
+        # Deal initial hands
+        player = [deck.pop(), deck.pop()]
+        dealer = [deck.pop(), deck.pop()]
+
+        # Player strategy: hit until 17 or higher
+        while hand_value(player) < 17:
+            player.append(deck.pop())
+
+        # Dealer hits on soft 17
+        while hand_value(dealer) < 17 or (hand_value(dealer) == 17 and 'A' in dealer and sum(VALUES[c] for c in dealer) > 17):
+            dealer.append(deck.pop())
+
+        player_total = hand_value(player)
+        dealer_total = hand_value(dealer)
+
+        if player_total > 21:
+            outcomes["dealer_win"] += 1
+        elif dealer_total > 21 or player_total > dealer_total:
+            outcomes["player_win"] += 1
+        elif dealer_total > player_total:
+            outcomes["dealer_win"] += 1
+        else:
+            outcomes["push"] += 1
+
+    # Output results
+    total = sum(outcomes.values())
+    for k, v in outcomes.items():
+        print(f"{k}: {v} ({(v/total)*100:.2f}%)")
+
+if __name__ == "__main__":
+    simulate_blackjack(100000)
